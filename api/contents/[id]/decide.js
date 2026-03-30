@@ -62,8 +62,11 @@ export default async function handler(req, res) {
           decided_at: new Date().toISOString(),
           content: {
             title: content.title,
+            text: content.content,
             platform: content.platform,
+            media_urls: content.media_urls || [],
             scheduled_date: content.scheduled_date,
+            metadata: content.metadata || {},
           },
         };
 
