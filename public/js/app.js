@@ -182,33 +182,38 @@ async function submitDecision() {
 
 // ── Renderização: Stats/Dashboard ────────────────────
 function renderStats() {
+  console.log("renderStats called with state.stats:", state.stats);
   if (!state.stats) return;
-  const { total, pending, approved, rejected, approval_rate } = state.stats;
+  try {
+    const { total, pending, approved, rejected, approval_rate } = state.stats;
 
-  els.statTotal.textContent   = total;
-  els.statPending.textContent = pending;
-  els.statApproved.textContent = approved;
-  els.statRate.textContent    = `${approval_rate}%`;
+    els.statTotal.textContent   = total;
+    els.statPending.textContent = pending;
+    els.statApproved.textContent = approved;
+    els.statRate.textContent    = `${approval_rate}%`;
 
-  // Barras de distribuição
-  const base = total || 1;
-  const ap = Math.round((approved / base) * 100);
-  const pe = Math.round((pending  / base) * 100);
-  const re = Math.round((rejected / base) * 100);
+    // Barras de distribuição
+    const base = total || 1;
+    const ap = Math.round((approved / base) * 100);
+    const pe = Math.round((pending  / base) * 100);
+    const re = Math.round((rejected / base) * 100);
 
-  els.rateApprovedPct.textContent = `${ap}%`;
-  els.ratePendingPct.textContent  = `${pe}%`;
-  els.rateRejectedPct.textContent = `${re}%`;
-  els.rateApprovedBar.style.width = `${ap}%`;
-  els.ratePendingBar.style.width  = `${pe}%`;
-  els.rateRejectedBar.style.width = `${re}%`;
+    els.rateApprovedPct.textContent = `${ap}%`;
+    els.ratePendingPct.textContent  = `${pe}%`;
+    els.rateRejectedPct.textContent = `${re}%`;
+    els.rateApprovedBar.style.width = `${ap}%`;
+    els.ratePendingBar.style.width  = `${pe}%`;
+    els.rateRejectedBar.style.width = `${re}%`;
 
-  // Badge sidebar
-  els.pendingBadge.textContent = pending > 0 ? pending : '';
-  els.pendingBadge.style.display = pending > 0 ? 'flex' : 'none';
+    // Badge sidebar
+    els.pendingBadge.textContent = pending > 0 ? pending : '';
+    els.pendingBadge.style.display = pending > 0 ? 'flex' : 'none';
 
-  // Atividade Recente
-  renderActivity();
+    // Atividade Recente
+    renderActivity();
+  } catch (err) {
+    console.error("ERRO NO RENDERSTATS:", err);
+  }
 }
 
 async function renderActivity() {
