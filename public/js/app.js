@@ -89,7 +89,19 @@ async function apiFetch(path, options = {}) {
     headers: { 'Content-Type': 'application/json' },
     ...options,
   });
-  const data = await res.json();
+
+  const contentType = res.headers.get('content-type');
+  let data;
+
+  if (contentType && contentType.includes('application/json')) {
+    data = await res.json();
+  } else {
+    // Se não for JSON, provavelmente é uma página de erro HTML 404/500
+    const text = await res.text();
+    console.error('Resposta não-JSON recebida:', text.slice(0, 200));
+    throw new Error(`Erro do servidor (${res.status}): A API retornou um formato inesperado.`);
+  }
+
   if (!res.ok) throw new Error(data.error || `Erro ${res.status}`);
   return data;
 }
