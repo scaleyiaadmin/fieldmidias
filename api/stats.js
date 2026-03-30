@@ -11,12 +11,13 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { data, error } = await supabase
+    const { data: rawData, error } = await supabase
       .from('contents')
       .select('status, created_at');
 
     if (error) throw error;
-
+    
+    const data = rawData || [];
     const total = data.length;
     const pending = data.filter(c => c.status === 'pending').length;
     const approved = data.filter(c => c.status === 'approved').length;
@@ -27,6 +28,9 @@ export default async function handler(req, res) {
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     const recentTotal = data.filter(c => new Date(c.created_at) >= sevenDaysAgo).length;
 
+    // Cálculo da taxa: aprovados / (aprovados + rejeitados)
+    const decided = approved + rejected;
+
     return res.status(200).json({
       success: true,
       stats: {
@@ -35,7 +39,7 @@ export default async function handler(req, res) {
         approved,
         rejected,
         recent_7_days: recentTotal,
-        approval_rate: total > 0 ? Math.round((approved / (approved + rejected || 1)) * 100) : 0,
+        approval_rate: decided > 0 ? Math.round((approved / decided) * 100) : 0,
       },
     });
   } catch (err) {

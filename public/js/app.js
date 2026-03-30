@@ -96,11 +96,13 @@ async function apiFetch(path, options = {}) {
 
 async function loadStats() {
   try {
+    console.log("Chamando /api/stats...");
     const data = await apiFetch('/stats');
+    console.log("Dados de Stats recebidos:", data);
     state.stats = data.stats;
     renderStats();
   } catch (e) {
-    console.error('loadStats:', e);
+    console.error('Erro em loadStats:', e);
   }
 }
 
