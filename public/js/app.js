@@ -19,60 +19,69 @@ const state = {
 // ── DOM helpers ──────────────────────────────────────
 const $ = id => document.getElementById(id);
 
-const els = {
-  // views
-  viewDashboard:   $('view-dashboard'),
-  viewContents:    $('view-contents'),
-  breadcrumb:      $('breadcrumb-label'),
-  // sidebar
-  navDashboard:    $('nav-dashboard'),
-  navContents:     $('nav-contents'),
-  pendingBadge:    $('pending-badge'),
-  // topbar
-  lastUpdate:      $('last-update'),
-  refreshBtn:      $('refresh-btn'),
-  // dashboard stats
-  statTotal:       $('stat-total'),
-  statPending:     $('stat-pending'),
-  statApproved:    $('stat-approved'),
-  statRate:        $('stat-rate'),
-  activityList:    $('activity-list'),
-  rateApprovedPct: $('rate-approved-pct'),
-  ratePendingPct:  $('rate-pending-pct'),
-  rateRejectedPct: $('rate-rejected-pct'),
-  rateApprovedBar: $('rate-approved-bar'),
-  ratePendingBar:  $('rate-pending-bar'),
-  rateRejectedBar: $('rate-rejected-bar'),
-  dashSeeAll:      $('dash-see-all'),
-  // contents
-  statusTabs:      $('status-tabs'),
-  cardsList:       $('cards-list'),
-  resultCount:     $('result-count'),
-  tabCountPending:  $('tab-count-pending'),
-  tabCountApproved: $('tab-count-approved'),
-  tabCountRejected: $('tab-count-rejected'),
-  tabCountAll:      $('tab-count-all'),
-  // modal
-  modal:           $('decision-modal'),
-  modalIcon:       $('modal-icon'),
-  modalTitle:      $('modal-title'),
-  modalSubtitle:   $('modal-subtitle'),
-  modalClose:      $('modal-close'),
-  modalCancel:     $('modal-cancel'),
-  modalConfirm:    $('modal-confirm'),
-  modalContentTitle:   $('modal-content-title'),
-  modalContentPreview: $('modal-content-preview'),
-  commentInput:    $('decision-comment'),
-  commentRequired: $('comment-required'),
-  commentHint:     $('comment-hint'),
-  // drawer
-  drawer:         $('detail-drawer'),
-  drawerBody:     $('drawer-body'),
-  drawerFooter:   $('drawer-footer'),
-  drawerClose:    $('drawer-close'),
-  // toast
-  toastContainer: $('toast-container'),
-};
+let els = {}; // Será preenchido no init
+
+function initElements() {
+  els = {
+    // views
+    viewDashboard:   $('view-dashboard'),
+    viewContents:    $('view-contents'),
+    breadcrumb:      $('breadcrumb-label'),
+    // sidebar
+    navDashboard:    $('nav-dashboard'),
+    navContents:     $('nav-contents'),
+    pendingBadge:    $('pending-badge'),
+    // topbar
+    lastUpdate:      $('last-update'),
+    refreshBtn:      $('refresh-btn'),
+    // dashboard stats
+    statTotal:       $('stat-total'),
+    statPending:     $('stat-pending'),
+    statApproved:    $('stat-approved'),
+    statRate:        $('stat-rate'),
+    activityList:    $('activity-list'),
+    rateApprovedPct: $('rate-approved-pct'),
+    ratePendingPct:  $('rate-pending-pct'),
+    rateRejectedPct: $('rate-rejected-pct'),
+    rateApprovedBar: $('rate-approved-bar'),
+    ratePendingBar:  $('rate-pending-bar'),
+    rateRejectedBar: $('rate-rejected-bar'),
+    dashSeeAll:      $('dash-see-all'),
+    // contents
+    statusTabs:      $('status-tabs'),
+    cardsList:       $('cards-list'),
+    resultCount:     $('result-count'),
+    tabCountPending:  $('tab-count-pending'),
+    tabCountApproved: $('tab-count-approved'),
+    tabCountRejected: $('tab-count-rejected'),
+    tabCountAll:      $('tab-count-all'),
+    // modal
+    modal:           $('decision-modal'),
+    modalIcon:       $('modal-icon'),
+    modalTitle:      $('modal-title'),
+    modalSubtitle:   $('modal-subtitle'),
+    modalClose:      $('modal-close'),
+    modalCancel:     $('modal-cancel'),
+    modalConfirm:    $('modal-confirm'),
+    modalContentTitle:   $('modal-content-title'),
+    modalContentPreview: $('modal-content-preview'),
+    commentInput:    $('decision-comment'),
+    commentRequired: $('comment-required'),
+    commentHint:     $('comment-hint'),
+    // drawer
+    drawer:         $('detail-drawer'),
+    drawerBody:     $('drawer-body'),
+    drawerFooter:   $('drawer-footer'),
+    drawerClose:    $('drawer-close'),
+    // toast
+    toastContainer: $('toast-container'),
+  };
+  
+  // Debug: Verificar se algum elemento crítico falhou
+  Object.entries(els).forEach(([key, val]) => {
+    if (!val) console.warn(`Aviso: Elemento '${key}' não encontrado no DOM.`);
+  });
+}
 
 // ── API ──────────────────────────────────────────────
 async function apiFetch(path, options = {}) {
@@ -632,8 +641,18 @@ async function refresh() {
 
 // ── Init ─────────────────────────────────────────────
 async function init() {
+  console.log("Iniciando Field Mídias App...");
+  initElements();
   bindEvents();
-  await Promise.all([loadStats(), loadAllForCounts()]);
+  
+  try {
+    console.log("Carregando dados iniciais...");
+    await Promise.all([loadStats(), loadAllForCounts()]);
+    console.log("Dados carregados com sucesso.");
+  } catch (err) {
+    console.error("Erro no carregamento inicial:", err);
+  }
+  
   updateLastUpdate();
   setInterval(refresh, REFRESH_MS);
 }
