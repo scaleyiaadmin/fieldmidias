@@ -75,6 +75,10 @@ function initElements() {
     drawerClose:    $('drawer-close'),
     // toast
     toastContainer: $('toast-container'),
+    // zoom
+    zoomOverlay: $('zoom-overlay'),
+    zoomImg:     $('zoom-img'),
+    zoomClose:   $('zoom-close'),
   };
   
   // Debug: Verificar se algum elemento crítico falhou
@@ -376,7 +380,7 @@ function openDrawer(contentId) {
     mediaHtml = `<div class="drawer-media">📷</div>`;
   }
 
-  const reviewSection = c.reviewer_name ? `
+  const reviewSection = c.decided_at ? `
     <div class="drawer-section">
       <div class="drawer-section-label">Revisão</div>
       <div class="drawer-section-value">
@@ -415,6 +419,12 @@ function openDrawer(contentId) {
       <div class="drawer-section-value">${formatDate(c.created_at)}</div>
     </div>
     ${reviewSection}`;
+
+  // Bind zoom em imagens
+  const images = els.drawerBody.querySelectorAll('img');
+  images.forEach(img => {
+    img.addEventListener('click', () => openZoom(img.src));
+  });
 
   // Footer com ações se pendente
   if (c.status === 'pending') {
@@ -455,6 +465,20 @@ window.scrollCarousel = function(btn, dir) {
   const scrollAmount = container.clientWidth * 0.9;
   container.scrollBy({ left: dir * scrollAmount, behavior: 'smooth' });
 };
+
+// ── Zoom (Lightbox) ──────────────────────────────────
+function openZoom(src) {
+  if (!src) return;
+  els.zoomImg.src = src;
+  els.zoomOverlay.classList.add('open');
+  document.body.style.overflow = 'hidden'; // Trava o scroll do fundo
+}
+
+function closeZoom() {
+  els.zoomOverlay.classList.remove('open');
+  document.body.style.overflow = '';
+  setTimeout(() => { els.zoomImg.src = ''; }, 300);
+}
 
 // ── Modal ────────────────────────────────────────────
 function openModal(type, contentId, dataset) {
@@ -637,7 +661,15 @@ function bindEvents() {
 
   // ESC
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { closeModal(); closeDrawer(); }
+    if (e.key === 'Escape') { closeModal(); closeDrawer(); closeZoom(); }
+  });
+
+  // Zoom
+  els.zoomClose.addEventListener('click', closeZoom);
+  els.zoomOverlay.addEventListener('click', e => {
+    if (e.target === els.zoomOverlay || e.target.classList.contains('zoom-content')) {
+      closeZoom();
+    }
   });
 }
 
