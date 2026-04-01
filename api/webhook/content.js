@@ -13,7 +13,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const {
+    let {
       title,
       content,
       platform = 'instagram',
@@ -31,7 +31,54 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'O campo "callback_url" é obrigatório (resumeUrl do n8n).' });
     }
 
-    // Salva no Supabase
+    // Normalização de media_urls: 
+    // Se for uma string única com vírgulas (como vindo do n8n por engano), transforma em array
+    if (typeof media_urls === 'string') {
+      media_urls = media_urls.split(',').map(u => u.trim()).filter(u => u.length > 0);
+    } else if (Array.isArray(media_urls) && media_urls.length === 1 && media_urls[0].includes(',')) {
+      // Caso ["url1,url2"]
+      media_urls = media_urls[0].split(',').map(u => u.trim()).filter(u => u.length > 0);
+    }
+
+    // Tenta encontrar o conteúdo pendente mais recente com o mesmo callback_url para agrupar
+    const { data: results, error: findError } = await supabase
+      .from('contents')
+      .select('id, media_urls, metadata')
+      .eq('callback_url', callback_url)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false })
+      .limit(1);
+
+    const existing = results && results.length > 0 ? results[0] : null;
+
+    if (existing && !findError) {
+      // Agrupa: Adiciona as novas URLs se já não existirem
+      const combinedUrls = [...new Set([...(existing.media_urls || []), ...media_urls])];
+      
+      const { data: updated, error: updateError } = await supabase
+        .from('contents')
+        .update({ 
+          media_urls: combinedUrls,
+          title, // Atualiza o título caso tenha vindo diferente
+          content,
+          metadata: { ...existing.metadata, ...metadata } // Faz merge do metadata
+        })
+        .eq('id', existing.id)
+        .select()
+        .single();
+
+      if (updateError) throw updateError;
+
+      return res.status(200).json({
+        success: true,
+        message: 'Conteúdo atualizado e agrupado no carrossel.',
+        content_id: updated.id,
+        status: 'pending',
+        is_grouped: true
+      });
+    }
+
+    // Se não existir, cria um novo
     const { data, error } = await supabase
       .from('contents')
       .insert([{
@@ -49,7 +96,7 @@ export default async function handler(req, res) {
 
     if (error) throw error;
 
-    // Envia email de notificação (não bloqueia a resposta)
+    // Envia email de notificação apenas na criação do primeiro item
     sendNewContentEmail(data).catch(err =>
       console.error('Erro ao enviar email de notificação:', err)
     );
