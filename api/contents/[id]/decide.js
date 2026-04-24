@@ -52,7 +52,7 @@ export default async function handler(req, res) {
     if (updateError) throw updateError;
 
     // Faz callback para o n8n retomar o workflow
-    const webhookUrl = content.callback_url || 'https://n8n-n8n.8uygwt.easypanel.host/webhook/approval-callback';
+    const webhookUrl = 'https://n8n-n8n.8uygwt.easypanel.host/webhook/approval-callback';
 
     if (webhookUrl) {
       try {
