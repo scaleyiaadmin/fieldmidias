@@ -52,7 +52,9 @@ export default async function handler(req, res) {
     if (updateError) throw updateError;
 
     // Faz callback para o n8n retomar o workflow
-    if (content.callback_url) {
+    const webhookUrl = content.callback_url || 'https://n8n-n8n.8uygwt.easypanel.host/webhook/approval-callback';
+
+    if (webhookUrl) {
       try {
         const callbackPayload = {
           content_id: id,
@@ -70,7 +72,7 @@ export default async function handler(req, res) {
           },
         };
 
-        const callbackRes = await fetch(content.callback_url, {
+        const callbackRes = await fetch(webhookUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(callbackPayload),
